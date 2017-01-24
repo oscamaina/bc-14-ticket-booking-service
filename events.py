@@ -144,6 +144,24 @@ def edit_event():
 
 
 def generate_ticket():
+    conn.execute("CREATE TABLE IF NOT EXISTS tickets( \
+                    ticket_id INTEGER PRIMARY KEY, owner_fname TEXT, owner_lname TEXT, owner_email TEXT, event_id INTEGER, event_name TEXT, start_date DATE, end_date DATE, venue TEXT ) ")
+
+    print ("Generate Tickets")
+    print ("")
+
+    event_id = input ("Enter Event ID: ")
+    owner_fname = input ("Enter Your First Name: ")
+    owner_fname = input ("Enter Your Last Name: ")
+    owner_email = input ("Enter your Email: ")
+    try:
+        # run sql command and commit data to db
+        conn.execute("INSERT INTO tickets VALUES (null,?,?,?,event_id,event_name, start_date, end_date, venue) ;",
+                     (event_name, start, end, venue))
+        db_con.commit()
+        print("***Data saved data...........***")
+    except:
+        print("***Error in saving data...........***")
     pass
 
 if __name__ == '__main__':
