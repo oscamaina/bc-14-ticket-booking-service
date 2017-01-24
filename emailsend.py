@@ -1,3 +1,4 @@
+
 import smtplib
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
@@ -14,13 +15,15 @@ body = "YOUR MESSAGE HERE"
 msg.attach(MIMEText(body, 'plain'))
 
 try: 
-	server = smtplib.SMTP('smtp.gmail.com', 587)	#Calls Gmail SMTP server
+	server = smtplib.SMTP('smtp.gmail.com', 587)	#Call Gmail SMTP server
 	server.starttls()
 	server.login(senders, "daliken1995")		#Senders authentication
 	text = msg.as_string()
 	server.sendmail(senders, receivers, text)
-	#email sent successfully
-	print ".................Email sent.............................."
+	#if se
+	print (".................Email sent..............................")
 	server.quit()
 except:
-	print "Error: unable to send email"
+	print ("Error: unable to send email")
+
+

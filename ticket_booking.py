@@ -7,11 +7,10 @@ db_con = sqlite3.connect("event_booking.db")
 #create a temporary memory to store data
 conn = db_con.cursor()
 
-def add_items():
+def add_events():
     #create table
-    conn.execute("CREATE TABLE IF NOT EXISTS events( \
-                    event_id INTEGER PRIMARY KEY, event_name TEXT, \
-                    start_date DATE, end_date DATE, venue TEXT,) ")
+    conn.execute("CREATE TABLE IF NOT EXISTS event( \
+                    event_id INTEGER PRIMARY KEY, event_name TEXT, start_date DATE, end_date DATE, venue TEXT ) ")
     
     #get user input
     print("Enter an Event")
@@ -35,7 +34,7 @@ def add_items():
     
     try:
     #run sql command and commit data to db
-    	conn.execute("INSERT INTO events VALUES (null,?,?,?,?);",\
+    	conn.execute("INSERT INTO event VALUES (null,?,?,?,?);",\
                  (event_name, start, end, venue ))
     	db_con.commit()
     	print ("***Data saved data...........***")
@@ -44,7 +43,7 @@ def add_items():
 
 def view_all():
 	# print ("All Events (Open and Closed)")
-    conn.execute("SELECT * FROM events")
+    conn.execute("SELECT * FROM event")
     items = conn.fetchall()
     for row in items:
     	print (row)
@@ -53,7 +52,7 @@ def delete_event():
 	eventid = str(input('Please enter ID of the event to be deleted: '))
 	try:
 
-		conn.execute("DELETE FROM events WHERE event_id=?", (eventid,))
+		conn.execute("DELETE FROM event WHERE event_id=?", (eventid,))
 		db_con.commit()
 		print ("Event with ID " + eventid + " has been deleted successfully__________***")
 	except:
