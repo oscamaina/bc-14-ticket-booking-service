@@ -7,12 +7,11 @@ db_con = sqlite3.connect("event_booking.db")
 #create a temporary memory to store data
 conn = db_con.cursor()
 
+
 def add_items():
     #create table
-    conn.execute("CREATE TABLE IF NOT EXISTS events( \
-                    event_id INTEGER PRIMARY KEY, event_name TEXT, \
-                    start_date DATE, end_date DATE, description TEXT, \
-                    no_of_tickets INTEGER, status TEXT ) ")
+    conn.execute("CREATE TABLE IF NOT EXISTS event( \
+                    event_id INTEGER PRIMARY KEY, event_name TEXT, start_date DATE, end_date DATE, venue TEXT ) ")
     
     #get user input
     print("Enter an Event")
@@ -28,25 +27,25 @@ def add_items():
     year, month, day = map(int, date2_entry.split('-'))
     end = datetime.date(year, month, day)
 #Event Description
-    description = input('Enter desc: ')
+    venue = input('Enter Venue: ')
 #Number of tickets Available
-    no_of_tickets = input('Number of Tickets: ')
+#    no_of_tickets = input('Number of Tickets: ')
 #Status of the event
-    status = input ('Status (Open/Closed): ')
+#   status = input ('Status (Open/Closed): ')
     
     try:
     #run sql command and commit data to db
-    	conn.execute("INSERT INTO events VALUES (null,?,?,?,?,?,?);",\
-                 (event_name, start, end, description, no_of_tickets, status ))
+    	conn.execute("INSERT INTO event VALUES (null,?,?,?,?);",\
+                 (event_name, start, end, venue ))
     	db_con.commit()
     	print ("***Data saved data...........***")
     except:
     	print ("***Error in saving data...........***")
 
-
+#function to fetch all the Events in the Database
 def view_all():
 	# print ("All Events (Open and Closed)")
-    conn.execute("SELECT * FROM events")
+    conn.execute("SELECT * FROM event")
     items = conn.fetchall()
     for row in items:
     	print (row)
@@ -60,14 +59,79 @@ def view_all():
 
 #Function to delete Events
 def delete_event():
-	data3 = str(input('Please enter name: '))
+	eventid = int (input('Please enter ID of the event to be deleted: '))
 	try:
-		conn.execute("DELETE FROM events WHERE event_name=?", (data3,))
+
+		conn.execute("DELETE FROM event WHERE event_id=?", (eventid,))
 		db_con.commit()
-		print (data3 + " has been delete successfully__________***")
+		print ("Event with ID " + eventid + " has been deleted successfully__________***")
 	except:
 		print ("Error in deleting file")		
 
+def edit_event():
+    # print ("Enter The Module/Attribute to be Editted beginning with the key word 'edit'")
+    print ("Use name to edit event name, start_date to edit when the event begin, end_date to edit when the event ends and venue to edit the venue")
+    print ("Example: What would you like to edit?: venue ")
+    label = str(input ("What would you like to edit?:  "))
+    #split string into list 
+    if label == 'name':
+        event_id = int (input("Enter te ID of the event to be modified: "))
+        if type(event_id) is not int:
+        	print ("Invalid Input. Input should be a Number")
+        	return event_id
+        	
+        else:
+        	event_name = str (input ("Enter the new name: "))
+        	try:
+        		conn.execute("UPDATE event SET event_name=? WHERE event_id=?", (event_name, event_id,))
+        		db_con.commit()
+        		print("***______________Event Name Updated successfully____________***")
+        	except:
+        		print ("Error in updating db")
+    elif label == 'start_date':
+    	event_id =int (input("Enter the ID of the event to be modified: "))
+    	date1 = input('Enter the new start date in YYYY-MM-DD format: ')
+    	year, month, day = map(int, date1.split('-'))
+    	start = datetime.date(year, month, day)
+    	try:
+    		conn.execute("UPDATE event SET start_date=? WHERE event_id=?", (start, event_id,))
+    		db_con.commit()
+    		print ("***_______________Start Date Updated successfully____________***")
+		except:
+        	print ("Error in updating db")
+  
+    elif label == 'end_date':
+    	event_id = str(input("Enter te ID of the event to be modified: "))
+    	date2 = input('Enter the new start date in YYYY-MM-DD format: ')
+    	year, month, day = map(int, date2.split('-'))
+    	end = datetime.date(year, month, day)
+    	try:
+    		conn.execute("UPDATE event SET end_date=? WHERE event_id=?", (end, event_id,))
+    		db_con.commit()
+    		print("***_____________End Date Updated successfully____________***")
+    	except:
+    		print ("Error in updating db")
+
+    elif label == 'venue':
+    	event_id = int (input("Enter te ID of the event to be modified: "))
+    	if type(event_id) is not int:
+    		print ("Invalid Input. Input should be a number")
+    		return event_id
+    	else:
+    		venue = str (input ("Enter the new name: "))
+    		try:
+    			conn.execute("UPDATE event SET venue=? WHERE event_id=?", (venue, event_id,))
+    			db_con.commit()
+    			print("***______________Venue Updated successfully____________***")
+    		except:
+    			print ("Error in updating db")
+    else:
+    	print ("Invalid Input")
+    	return label
+
+def generate_ticket():
+	
+
 if __name__ == '__main__':
 
-	view_all()
+	edit_event()
