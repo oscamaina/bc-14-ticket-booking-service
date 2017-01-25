@@ -47,7 +47,7 @@ def add_items():
 
 def view_all():
     try:      # print ("All Events (Open and Closed)")
-        conn.execute("SELECT * FROM tickets")
+        conn.execute("SELECT * FROM event")
         items = conn.fetchall()
         for row in items:
             print(row)
@@ -177,4 +177,4 @@ def generate_ticket():
 
 if __name__ == '__main__':
 
-    view_all()
+    generate_ticket()
