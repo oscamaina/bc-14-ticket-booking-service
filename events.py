@@ -1,6 +1,7 @@
 import sqlite3
 import datetime
-
+import smtplib
+ 
 
 # connect to database
 db_con = sqlite3.connect("event_booking.db")
@@ -155,7 +156,7 @@ def generate_ticket():
     event_id = input ("Enter Event ID: ")
     owner_fname = input ("Enter Your First Name: ")
     owner_lname = input ("Enter Your Last Name: ")
-    owner_email = input ("Enter your Email: ")
+    receivers = input ("Enter your Email: ")
     try:
         # run sql command and commit data to db
         item = conn.execute("SELECT event_name, start_date, end_date, venue FROM event WHERE event_id=?",(event_id))
@@ -164,13 +165,32 @@ def generate_ticket():
             s_date = column [1]
             e_date = column [2]
             venue = column [3]
-            # print ("name: " + name) conn.execute("INSERT INTO event VALUES (null,?,?,?,?);",
-                     # (event_name, start, end, venue))
-            # print ("Start Date: " + s_date)
+            
             conn.execute("INSERT INTO tickets VALUES (null,?,?,?,?,?,?,?,?);",
-                            (owner_fname, owner_lname, owner_email, name, s_date, e_date, venue, event_id))
+                            (owner_fname, owner_lname, receivers, name, s_date, e_date, venue, event_id))
             db_con.commit()
         print("***Data saved data...........***")
+        print ("***___Sending Email___***")
+        senders = "daisywndungu@gmail.com"      #Senders Email Address
+        # receivers = input("Enter your email: ") #Receiver email Address
+        message = """From: From Person <from@fromdomain.com>
+        To: To Person <to@todomain.com>
+        Subject: SMTP e-mail test
+
+        This is a test e-mail message.
+        """
+        try: 
+            server = smtplib.SMTP('smtp.gmail.com', 587)    #Call Gmail SMTP server
+            server.starttls()
+            server.login(senders, "daliken1995")        #Senders authentication
+            
+            server.sendmail(senders, receivers, message)
+            #if se
+            print (".................Email sent..............................")
+            server.quit()
+        except:
+            print ("Error: unable to send email")
+
     except:
         print("***Error in saving data...........***")
     pass
