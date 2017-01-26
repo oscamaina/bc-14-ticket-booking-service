@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 """
-This example uses docopt with the built in cmd module to demonstrate an
-interactive command application.
 
 Usage:
     events 411 add_events <event_name>
@@ -9,6 +7,7 @@ Usage:
     events 411 delete_event <eventid>
     events 411 edit_event <event_id>
     events 411 ticket_invalidation <ticket_id> 
+
 
 Options:
     -i, --interactive  Interactive Mode
