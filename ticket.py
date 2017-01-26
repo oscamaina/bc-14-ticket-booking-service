@@ -8,9 +8,49 @@ import re
 db_con = sqlite3.connect("event_booking.db")
 # create a temporary memory to store data
 conn = db_con.cursor()
+#Add Events 
+def add_events():
+    # create table
+    conn.execute("CREATE TABLE IF NOT EXISTS event( \
+                    event_id INTEGER PRIMARY KEY, event_name TEXT, start_date DATE, end_date DATE, venue TEXT ) ")
 
+    # get user input
+    print("Enter a New Event")
+    print("")
 
+    
+# Number of tickets Available
+#    no_of_tickets = input('Number of Tickets: ')
+# Status of the event
+#   status = input ('Status (Open/Closed): ')
+
+    try:
+        # run sql command and commit data to db
+        event_name = input('Enter Event name: ')
+    # Event Start Date
+        date1_entry = input('Enter date event begins in YYYY-MM-DD format: ')
+        year, month, day = map(int, date1_entry.split('-'))
+        start = datetime.date(year, month, day)
+    # Event End Date
+        date2_entry = input('Enter date event ends in YYYY-MM-DD format: ')
+        year, month, day = map(int, date2_entry.split('-'))
+        end = datetime.date(year, month, day)
+    # Event Description
+        venue = input('Enter Venue: ')
+        if end >= datetime.date.today() and start >= datetime.date.today():
+            conn.execute("INSERT INTO event VALUES (null,?,?,?,?);",
+                         (event_name, start, end, venue))
+            db_con.commit()
+            print("***.........Data saved data...........***")
+        else:
+            print(".........Invalid Dates. Start and End Date should be Greater than Today's date..........")
+            return add_events()
+
+    except ValueError:
+        print("***......Error in saving data. Invalid Inputs. Note: Start date and End date should be greater than today...........***")
+        return add_events()
 #View all events or all tickets
+
 def view_all():
     print ("Enter The Name of the table to be modified")
     name = input ("Table Name: ")
@@ -35,7 +75,8 @@ def view_all():
     else:
         print("Invalid Input. Try Again")
         return view_all()
-#Delete Function
+
+
 def delete_event():
     
     try:
@@ -45,27 +86,18 @@ def delete_event():
         conn.execute("DELETE FROM event WHERE event_id=?", (data,))
         db_con.commit()
         print("***_______Event with ID " + eventid +" has been deleted successfully__________***")
-        # else:
-        #     print("Event Does Not Exist")
+        
     except ValueError:
         print("Invalid Input. Try Again")
         return delete_event()
 #edit Data in events
-def edit_event():#
-    # print ("Enter The Module/Attribute to be Editted beginning with the key word 'edit'")
-    # print(
-    #     "Use name to edit event name, start_date to edit when the event begin, end_date to edit when the event ends and venue to edit the venue")
-    # print("Example: What would you like to edit?: venue ")
+def edit_event():
+    
+
     try:
         eventid = int(input("Enter Event ID:  "))
     
-    # compares user input to the set conditions
-    # if type(label, int)
-    # if type()
-
-    #     print("Invalid Input. Input should be a Number")
-    #     return edit_event()
-    # else:    
+      
         conn.execute("SELECT * FROM event WHERE event_id=?", (eventid,))
         items = conn.fetchall()
         for i in items:
@@ -94,16 +126,17 @@ def edit_event():#
                 start = datetime.date(year, month, day)#edits
 
                 try:
-                    conn.execute("UPDATE event SET start_date=? WHERE event_id=?", (start, eventid,))
-                    db_con.commit()
-                    print ("***_______________Start Date Updated successfully____________***")
-                    print("***______________New Record____________***")
-                    conn.execute("SELECT * FROM event WHERE event_id=?", (eventid,))
-                    items = conn.fetchall()
-                    for i in items:
-                        print (i)
-                except:
-                    print ("Error in updating db")
+                	if start >= datetime.date.today():
+	                    conn.execute("UPDATE event SET start_date=? WHERE event_id=?", (start, eventid,))
+	                    db_con.commit()
+	                    print ("***_______________Start Date Updated successfully____________***")
+	                    print("***______________New Record____________***")
+	                    conn.execute("SELECT * FROM event WHERE event_id=?", (eventid,))
+	                    items = conn.fetchall()
+	                    for i in items:
+	                        print (i)
+                except Exception as e:
+                    print ("Error in updating Event Start Time. End Date should be Greater or Equal to Today's Date.")
             except ValueError:
                 print("Invalid Input.Try Again")
                 return edit_event()
@@ -145,8 +178,8 @@ def edit_event():#
                     items = conn.fetchall()
                     for i in items:
                         print (i)
-                except:
-                    print("Error in updating db")
+                except Exception as e:
+                    print("Error in updating db "+ str(e))
         else:
             print("Invalid Input")
             return edit_event()
@@ -165,7 +198,9 @@ def ticket_validation():
         items = conn.fetchall()
         for row in items:
             print(row)
-    # if t_id is int:
+        print("...This Ticket is valid...")
+        
+    # Catch Value Error when the user inputs a wrong value
     except ValueError:
         print("Invalid Input")
         return ticket_validation()
@@ -241,7 +276,7 @@ def main():
 		print("2. View Events")
 		print("3. Delete Events")
 		print("4. Edit Events")
-		print("5. Genarate Tickets")
+		print("5. Generate Tickets")
 		print("6. Validate Tickets")
 		print("0. Quit")
 		x = input("Please select an option: ")
