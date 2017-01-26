@@ -1,200 +1,333 @@
 import sqlite3
 import datetime
 import smtplib
- 
-
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import re
+from tabulate import tabulate 
+from termcolor import cprint, colored
 # connect to database
 db_con = sqlite3.connect("event_booking.db")
-# create a temporary memory to store data
+
 conn = db_con.cursor()
-
-
-def add_items():
+#Add new events
+def add_event(event_name):
     # create table
     conn.execute("CREATE TABLE IF NOT EXISTS event( \
                     event_id INTEGER PRIMARY KEY, event_name TEXT, start_date DATE, end_date DATE, venue TEXT ) ")
 
-    # get user input
-    print("Enter an Event")
-    print("")
 
-    event_name = input('Enter Event name: ')
-# Event Start Date
-    date1_entry = input('Enter date event begins in YYYY-MM-DD format: ')
-    year, month, day = map(int, date1_entry.split('-'))
-    start = datetime.date(year, month, day)
-# Event End Date
-    date2_entry = input('Enter date event ends in YYYY-MM-DD format: ')
-    year, month, day = map(int, date2_entry.split('-'))
-    end = datetime.date(year, month, day)
-# Event Description
-    venue = input('Enter Venue: ')
-# Number of tickets Available
-#    no_of_tickets = input('Number of Tickets: ')
-# Status of the event
-#   status = input ('Status (Open/Closed): ')
+    
+
 
     try:
-        # run sql command and commit data to db
-        conn.execute("INSERT INTO event VALUES (null,?,?,?,?);",
-                     (event_name, start, end, venue))
-        db_con.commit()
-        print("***Data saved data...........***")
-    except:
-        print("***Error in saving data...........***")
-
-# function to fetch all the Events in the Database
-
-
-def view_all():
-    try:      # print ("All Events (Open and Closed)")
-        conn.execute("SELECT * FROM event")
-        items = conn.fetchall()
-        for row in items:
-            print(row)
-        # print ("Event ID = ", row[0])
-        # print ("EVENT NAME = ", row[1])
-        # print ("START DATE = ", row[2])
-        # print ("END DATE = ", row[3])
-        # print ("DESCRIPTION = ", row[4])
-        # print ("NUMBER OF TICKETS = ", row[5])
-        # print ("STATUS = ", row[6]), "\n"
-        print ("***____________All Events Displayed Above___________***")
-    except:
-        print ("Error in printing")
-# Function to delete Events
-
-
-def delete_event():
-    eventid = int(input('Please enter ID of the event to be deleted: '))
-    try:
-
-        conn.execute("DELETE FROM event WHERE event_id=?", (eventid,))
-        db_con.commit()
-        print("Event with ID " + eventid +
-              " has been deleted successfully__________***")
-    except:
-        print("Error in deleting file")
-
-
-def edit_event():
-    # print ("Enter The Module/Attribute to be Editted beginning with the key word 'edit'")
-    print(
-        "Use name to edit event name, start_date to edit when the event begin, end_date to edit when the event ends and venue to edit the venue")
-    print("Example: What would you like to edit?: venue ")
-    label = str(input("What would you like to edit?:  "))
-    # compares user input to the set conditions
-    if label == 'name':
-        event_id = int(input("Enter te ID of the event to be modified: "))
-        if type(event_id) is not int:
-            print("Invalid Input. Input should be a Number")
-            return event_id
-
-        else:
-            event_name = str(input("Enter the new name: "))
-            try:
-                conn.execute(
-                    "UPDATE event SET event_name=? WHERE event_id=?", (event_name, event_id,))
-                db_con.commit()
-                print(
-                    "***______________Event Name Updated successfully____________***")
-            except:
-                print("Error in updating db")
-    elif label == 'start_date':
-        event_id =int (input("Enter the ID of the event to be modified: "))
-        date1 = input('Enter the new start date in YYYY-MM-DD format: ')
-        year, month, day = map(int, date1.split('-'))
+    
+    # Event Start Date
+        date1_entry = input('Enter date event begins in YYYY-MM-DD format: ')
+        year, month, day = map(int, date1_entry.split('-'))
         start = datetime.date(year, month, day)
-        try:
-            conn.execute("UPDATE event SET start_date=? WHERE event_id=?", (start, event_id,))
-            db_con.commit()
-            print ("***_______________Start Date Updated successfully____________***")
-        except:
-            print ("Error in updating db")
-
-    elif label == 'end_date':
-        event_id = str(input("Enter te ID of the event to be modified: "))
-        date2 = input('Enter the new start date in YYYY-MM-DD format: ')
-        year, month, day = map(int, date2.split('-'))
-        end = datetime.date(year, month, day)
-        try:
-            conn.execute(
-                "UPDATE event SET end_date=? WHERE event_id=?", (end, event_id,))
-            db_con.commit()
-            print(
-                "***_____________End Date Updated successfully____________***")
-        except:
-            print("Error in updating db")
-
-    elif label == 'venue':
-        event_id = int(input("Enter te ID of the event to be modified: "))
-        if type(event_id) is not int:
-            print("Invalid Input. Input should be a number")
-            return event_id
+        if start >= datetime.date.today():
+    # Event End Date
+            date2_entry = input('Enter date event ends in YYYY-MM-DD format: ')
+            year, month, day = map(int, date2_entry.split('-'))
+            end = datetime.date(year, month, day)
+            # Checks if the End Date is Later or Earlier than the Start Date 
+           
+            if end >= datetime.date.today() and end >= start:
+                venue = input('Enter Venue: ')
+                if type(venue) is str:
+                    conn.execute("INSERT INTO event VALUES (null,?,?,?,?);",
+                                 (event_name, start, end, venue))
+                    db_con.commit()
+                    cprint("***.........Data saved data...........***",'green')
+                else:
+                    print("Invalid Input.Venue Can not be a number")
+            else:
+                cprint("____________Invalid End Date. End data should be greater or equal to Start Date__________", "red")
+                return add_event(event_name)
         else:
-            venue = str(input("Enter the new name: "))
-            try:
-                conn.execute(
-                    "UPDATE event SET venue=? WHERE event_id=?", (venue, event_id,))
-                db_con.commit()
-                print(
-                    "***______________Venue Updated successfully____________***")
-            except:
-                print("Error in updating db")
+            print(".........Invalid Dates. Start Date should be Greater than Today's date..........",'red')
+            return add_event(event_name)
+
+    except ValueError:
+        print("***......Error in saving data. Invalid Inputs. Note: Start date and End date should be greater than today...........***",'red')
+        return add_event(event_name)
+
+
+def view_all(name):
+    """View all events or all tickets"""
+    print ("Enter The Name of the table to be modified: Events, Tickets, Invalid_Tickets")
+    
+    if name == 'tickets' or name == 'Tickets' or name == 'TICKETS':
+
+        try:     
+            conn.execute("SELECT * FROM tickets")
+            items = conn.fetchall()
+           
+            cprint (tabulate(items, headers=['Ticket ID', 'Event ID','First Name','Last Name','Email', 'Event Name', 'Start Date', 'End Date', 'Venue'], tablefmt='fancy_grid'), 'cyan')
+        except Exception as e:
+            print(e)
+            print("Error occurred")
+    elif name == 'events' or name == 'EVENTS' or name == 'Events':
+        try:
+            conn.execute("SELECT * FROM event")
+            items = conn.fetchall()
+           
+            cprint (tabulate(items, headers=['Event ID', 'Event Name', 'Start Date', 'End Date', 'Venue'], tablefmt='fancy_grid'), 'cyan')
+            print ("***____________All Events Displayed Above___________***")
+        except:
+            print ("Error in printing")
+    elif name == 'invalid_tickets' or name == 'INVALID_TICKETS' or name == 'Invalid_Tickets' or name == 'Inavalid_tickets':
+        try:
+            conn.execute("SELECT * FROM invalidtickets")
+            items = conn.fetchall()
+            
+            cprint (tabulate(items, headers=['Ticket Number', 'Ticket ID', 'Event ID','First Name','Last Name','Email', 'Event Name', 'Start Date', 'End Date', 'Venue'], tablefmt='fancy_grid'), 'red')
+            print ("***____________All Events Displayed Above___________***")
+        except:
+            print ("Error in printing")
     else:
+        print("Invalid Input. Try Again")
+        return view_all()
+
+
+def delete_event(eventid):
+    
+    try:
+        
+        data = int (eventid)
+
+        conn.execute("DELETE FROM event WHERE event_id=?", (data,))
+        db_con.commit()
+        cprint("***_______Event with ID " + eventid +" has been deleted successfully__________***",'green')
+        
+    except ValueError:
+        print("Invalid Input. Try Again")
+        return delete_event()
+
+def edit_event(event_id):
+    """edit Data in events"""
+    if type(event_id) is int:
+
+        try:
+            eventid = int(event_id)
+        
+          
+            conn.execute("SELECT * FROM event WHERE event_id=?", (eventid,))
+            items = conn.fetchall()
+           
+            cprint (tabulate(items, headers=['Event ID', 'Event Name', 'Start Date', 'End Date', 'Venue'], tablefmt='fancy_grid'), 'cyan')
+            label = input("Enter the field to be Editted: ")
+
+            if label == 'name':
+             
+                try:
+                    name = input("Enter New Event Name: ")
+                    conn.execute("UPDATE event SET event_name=? WHERE event_id=?", (name, eventid,))
+                    db_con.commit()
+                    cprint("***______________Event Name Updated successfully____________***",'green')
+                    cprint("***______________New Record____________***",'green')
+                    conn.execute("SELECT * FROM event WHERE event_id=?", (eventid,))
+                    items = conn.fetchall()
+                    cprint (tabulate(items, headers=['Event ID', 'Event Name', 'Start Date', 'End Date', 'Venue'], tablefmt='fancy_grid'), 'cyan')
+                    
+                except:
+                    print("Error in updating db")
+            elif label == 'start_date':
+                
+                date1 = input('Enter the new start date in YYYY-MM-DD format: ')
+                try:
+                    year, month, day = map(int, date1.split('-'))
+                    start = datetime.date(year, month, day)#edits
+
+                    try:
+                        if start >= datetime.date.today():
+                            conn.execute("UPDATE event SET start_date=? WHERE event_id=?", (start, eventid,))
+                            db_con.commit()
+                            cprint ("***_______________Start Date Updated successfully____________***",'green')
+                            cprint("***______________New Record____________***", 'green')
+                            conn.execute("SELECT * FROM event WHERE event_id=?", (eventid,))
+                            items = conn.fetchall()
+                            cprint (tabulate(items, headers=['Event ID', 'Event Name', 'Start Date', 'End Date', 'Venue'], tablefmt='fancy_grid'), 'cyan')
+                    except Exception as e:
+                        print ("Error in updating Event Start Time. End Date should be Greater or Equal to Today's Date.")
+                except ValueError:
+                    print("Invalid Input.Try Again")
+                    return edit_event()
+
+            elif label == 'end_date':
+                
+                date2 = input('Enter the new End date in YYYY-MM-DD format: ')
+                year, month, day = map(int, date2.split('-'))
+                end = datetime.date(year, month, day)
+
+                try:
+                    if end >= datetime.date.today():
+                        conn.execute(
+                            "UPDATE event SET end_date=? WHERE event_id=?", (end, eventid,))
+                        db_con.commit()
+                        print("\n***_____________End Date Updated successfully____________***\n")
+                        print("\n***______________New Record____________***\n")
+                        conn.execute("SELECT * FROM event WHERE event_id=?", (eventid,))
+                        items = conn.fetchall()
+                        cprint (tabulate(items, headers=['Event ID', 'Event Name', 'Start Date', 'End Date', 'Venue'], tablefmt='fancy_grid'), 'cyan')
+                except Exception as e:
+                    print("Error in updating End Date. End Date should be Greater or Equal to Today's Date" + str(e))
+
+            elif label == 'venue':
+                
+                if type(label) is not str:
+                    print("Invalid Input. Input should be a number")
+                    return event_id
+                else:
+                    venue = str(input("Enter the new name: "))
+                    try:
+                        conn.execute(
+                            "UPDATE event SET venue=? WHERE event_id=?", (venue, eventid,))
+                        db_con.commit()
+                        print("\n***______________Venue Updated successfully____________***\n")
+                        print("\n***______________New Record____________***\n")
+                        conn.execute("SELECT * FROM event WHERE event_id=?", (eventid,))
+                        items = conn.fetchall()
+                        cprint (tabulate(items, headers=['Event ID', 'Event Name', 'Start Date', 'End Date', 'Venue'], tablefmt='fancy_grid'), 'cyan')
+                    except Exception as e:
+                        print("Error in updating db "+ str(e))
+            else:
+                print("Invalid Input")
+                return edit_event()
+        except ValueError:
+            print ("Invalid Input.Try Again")
+            return edit_event()
+    else:
+        print("Invalid, event id should be number")
+
+
+
+def ticket_validation():
+    """Ticket Validation"""
+    try:
+        t_id =int(input ("Enter Your Ticket ID: "))
+        conn.execute("SELECT * FROM tickets WHERE ticket_id=?", (t_id,))
+        items = conn.fetchall()
+        cprint (tabulate(items, headers=['Ticket ID', 'Event ID','First Name','Last Name','Email', 'Event Name', 'Start Date', 'End Date', 'Venue'], tablefmt='fancy_grid'), 'cyan')
+        cprint("...This Ticket is valid...", 'cyan')
+
+    # Catch Value Error when the user inputs a wrong value
+    except ValueError:
         print("Invalid Input")
-        return label
+        return ticket_validation()
 
-
-def generate_ticket():
+def generate_ticket(eventid):
+    """Generating Tickets and sending Emails containg the Ticket details"""
     conn.execute("CREATE TABLE IF NOT EXISTS tickets( \
                     ticket_id INTEGER PRIMARY KEY, event_id INTEGER, owner_fname TEXT, owner_lname TEXT, owner_email TEXT, event_name TEXT, start_date DATE, end_date DATE, venue TEXT, FOREIGN KEY (event_id) REFERENCES event(event_id)) ")
 
     print ("Generate Tickets")
     print ("")
-
-    event_id = input ("Enter Event ID: ")
-    owner_fname = input ("Enter Your First Name: ")
-    owner_lname = input ("Enter Your Last Name: ")
-    receivers = input ("Enter your Email: ")
     try:
-        # run sql command and commit data to db
-        item = conn.execute("SELECT event_name, start_date, end_date, venue FROM event WHERE event_id=?",(event_id))
-        for column in item:
-            name = column [0]
-            s_date = column [1]
-            e_date = column [2]
-            venue = column [3]
+        event_id = int(eventid)
+        owner_fname = input ("Enter Your First Name: ")
+        owner_lname = input ("Enter Your Last Name: ")
+        receivers = input ("Enter your Email: ")
+        #Verifies the user's email
+        regex = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
+        s = receivers
+        if re.search(regex, s):
+            match = re.search(regex, s)
+            #runs if email is in correct format
+            try:
+            # run sql command and commit data to db
+                item = conn.execute("SELECT event_name, start_date, end_date, venue FROM event WHERE event_id=?",(str(event_id)))
+                for column in item:
+                    name = column [0]
+                    s_date = column [1]
+                    e_date = column [2]
+                    venue = column [3]
+                    
+                    conn.execute("INSERT INTO tickets VALUES (null,?,?,?,?,?,?,?,?);",
+                                    (event_id, owner_fname, owner_lname, receivers, name, s_date, e_date, venue))
+                    db_con.commit()
+                print("***Data saved data...........***")
+                print ("***___Sending Email___***")
+                #Sending Ticket Details to the user
+                
+                senders = "daisywndungu@gmail.com"      #Senders Email Address
+                msg = MIMEMultipart()
+                msg['From'] = senders
+                msg['To'] = receivers
+                msg['Subject'] = "Ticket Booking"
+                 
+                body = " Name:" + owner_fname + " " + owner_lname +"\n Event Name:" + name + "\n Starts On: " + s_date + "\n Ends On: " + e_date + "\n Venue: " + venue
+                msg.attach(MIMEText(body, 'plain'))
+                
+                try: 
+                    server = smtplib.SMTP('smtp.gmail.com', 587)    #Call Gmail SMTP server
+                    server.starttls()
+                    server.login(senders, "daliken1995")        #Senders authentication
+                    message = msg.as_string()
+                    server.sendmail(senders, receivers, message)
+                    
+                    print (".................Email sent..............................")
+                    server.quit()
+                except:
+                    print ("Error: unable to send email")
+
+            except:
+                print("***Error in saving data...........***")
+            pass
+        else:
+            print("Incorrect Email")
+            return generate_ticket()
+    except ValueError:
+        print("Invalid Id")
+ #Ticket Invalidation
+def ticket_invalidation(ticket_id):
+    
+    conn.execute("CREATE TABLE IF NOT EXISTS invalidtickets( \
+                    t_id INTEGER PRIMARY KEY, ticket_id INTEGER, event_id INTEGER, owner_fname TEXT, owner_lname TEXT, owner_email TEXT, event_name TEXT, start_date DATE, end_date DATE, venue TEXT, FOREIGN KEY (ticket_id) REFERENCES tickets(ticket_id)) ")
+
+    print ("Invalidate Tickets")
+    print ("")
+
+    try:
+        t_id = ticket_id
+    
+        
+        conn.execute("SELECT * FROM tickets WHERE ticket_id=?",(t_id))
+        items = conn.fetchall()
+        cprint (tabulate(items, headers=['Ticket ID', 'Event ID','First Name','Last Name','Email', 'Event Name', 'Start Date', 'End Date', 'Venue'], tablefmt='fancy_grid'), 'cyan')
+        label = input("This Ticket will be Invalidated. Type 'Y/y' to continue or 'N/n' to cancel: ")
+
+        if label == "y" or label == "Y":
+         
+            # Transfer Data in the Tickets Table as per the ticket id
+            item = conn.execute("SELECT ticket_id, event_id, owner_fname, owner_lname, owner_email, event_name, start_date, end_date, venue FROM Tickets WHERE ticket_id=?",(t_id))
+            for column in item:
+                num = column [0]
+                eventid = column [1]
+                owner_fname = column [2]
+                owner_lname = column [3]
+                owner_email = column [4]
+                name = column [5]
+                start_date = column [6]
+                end_date = column [7]
+                venue = column [8]
+                #Copies Selected Data to invalid_tickets table
+                conn.execute("INSERT INTO invalidtickets VALUES (null,?,?,?,?,?,?,?,?,?);",
+                                (num, eventid, owner_fname, owner_lname, owner_email, name, start_date, end_date, venue))
+                db_con.commit()
+                #Delete Selected Data in the Ticket Table
+                conn.execute("DELETE FROM tickets WHERE ticket_id=?", (t_id,))
+                db_con.commit()
+                cprint("***_______Event with ID " + t_id +" has been deleted successfully__________***", 'green')
             
-            conn.execute("INSERT INTO tickets VALUES (null,?,?,?,?,?,?,?,?);",
-                            (owner_fname, owner_lname, receivers, name, s_date, e_date, venue, event_id))
-            db_con.commit()
-        print("***Data saved data...........***")
-        print ("***___Sending Email___***")
-        senders = "daisywndungu@gmail.com"      #Senders Email Address
-        # receivers = input("Enter your email: ") #Receiver email Address
-        message = """From: From Person <from@fromdomain.com>
-        To: To Person <to@todomain.com>
-        Subject: SMTP e-mail test
 
-        This is a test e-mail message.
-        """
-        try: 
-            server = smtplib.SMTP('smtp.gmail.com', 587)    #Call Gmail SMTP server
-            server.starttls()
-            server.login(senders, "daliken1995")        #Senders authentication
-            
-            server.sendmail(senders, receivers, message)
-            #if se
-            print (".................Email sent..............................")
-            server.quit()
-        except:
-            print ("Error: unable to send email")
+        elif label == "n" or label == "N":
+            return ticket_invalidation()
+        else:
+            print ("Invalid Input")
+        
+    except Exception as e:
+        print("Error in updating db" + str(e))
 
-    except:
-        print("***Error in saving data...........***")
-    pass
 
-if __name__ == '__main__':
-
-    generate_ticket()

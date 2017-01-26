@@ -4,6 +4,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import re
+
 # connect to database
 db_con = sqlite3.connect("event_booking.db")
 # create a temporary memory to store data
@@ -19,10 +20,7 @@ def add_events():
     print("")
 
     
-# Number of tickets Available
-#    no_of_tickets = input('Number of Tickets: ')
-# Status of the event
-#   status = input ('Status (Open/Closed): ')
+
 
     try:
         # run sql command and commit data to db
@@ -52,7 +50,7 @@ def add_events():
 #View all events or all tickets
 
 def view_all():
-    print ("Enter The Name of the table to be modified")
+    print ("Enter The Name of the table to be modified: Events, Tickets, Invalid_Tickets")
     name = input ("Table Name: ")
     if name == 'tickets' or name == 'Tickets' or name == 'TICKETS':
 
@@ -66,6 +64,15 @@ def view_all():
     elif name == 'events' or name == 'EVENTS' or name == 'Events':
         try:
             conn.execute("SELECT * FROM event")
+            items = conn.fetchall()
+            for row in items:
+                print(row)
+            print ("***____________All Events Displayed Above___________***")
+        except:
+            print ("Error in printing")
+    elif name == 'invalid_tickets' or name == 'INVALID_TICKETS' or name == 'Invalid_Tickets' or name == 'Inavalid_tickets':
+        try:
+            conn.execute("SELECT * FROM invalidtickets")
             items = conn.fetchall()
             for row in items:
                 print(row)
@@ -199,7 +206,7 @@ def ticket_validation():
         for row in items:
             print(row)
         print("...This Ticket is valid...")
-        
+
     # Catch Value Error when the user inputs a wrong value
     except ValueError:
         print("Invalid Input")
@@ -231,10 +238,8 @@ def generate_ticket():
                 venue = column [3]
                 
                 conn.execute("INSERT INTO tickets VALUES (null,?,?,?,?,?,?,?,?);",
-                                (owner_fname, owner_lname, receivers, name, s_date, e_date, venue, e_id))
+                                (e_id, owner_fname, owner_lname, receivers, name, s_date, e_date, venue))
                 db_con.commit()
-                # t_id = conn.execute("SELECT ticket_id FROM tickets WHERE owner_fname=? AND owner_lname=? AND owner_email=? AND event_name=? AND start_date=? AND end_date=? AND venue=? AND event_id=?",
-                # 				(owner_fname, owner_lname, receivers, name, s_date, e_date, venue, e_id))
             print("***Data saved data...........***")
             print ("***___Sending Email___***")
             #Sending Ticket to the user
@@ -246,7 +251,7 @@ def generate_ticket():
             msg['To'] = receivers
             msg['Subject'] = "Ticket Booking"
              
-            body = " Name:" + owner_fname + " " + owner_lname +"\n Event Name:" + name + "\n Starts On: " + s_date + "\n Ends On: " + e_date + "\n Venue: " + venue #+ #"\n Ticket ID: " + t_id
+            body = " Name:" + owner_fname + " " + owner_lname +"\n Event Name:" + name + "\n Starts On: " + s_date + "\n Ends On: " + e_date + "\n Venue: " + venue
             msg.attach(MIMEText(body, 'plain'))
             
             try: 
@@ -255,7 +260,7 @@ def generate_ticket():
                 server.login(senders, "daliken1995")        #Senders authentication
                 message = msg.as_string()
                 server.sendmail(senders, receivers, message)
-                #if se
+                
                 print (".................Email sent..............................")
                 server.quit()
             except:
@@ -267,7 +272,56 @@ def generate_ticket():
     else:
         print("Incorrect Email")
         return generate_ticket()
+ #Ticket Invalidation
+def ticket_invalidation():
+    conn.execute("CREATE TABLE IF NOT EXISTS invalidtickets( \
+                    t_id INTEGER PRIMARY KEY, ticket_id INTEGER, event_id INTEGER, owner_fname TEXT, owner_lname TEXT, owner_email TEXT, event_name TEXT, start_date DATE, end_date DATE, venue TEXT, FOREIGN KEY (ticket_id) REFERENCES tickets(ticket_id)) ")
+
+    print ("Invalidate Tickets")
+    print ("")
+
+    try:
+        t_id = input("Enter Event ID:  ")
+    
         
+        conn.execute("SELECT * FROM tickets WHERE ticket_id=?", (int(t_id)))
+        items = conn.fetchall()
+        for i in items:
+            print (i)
+        label = input("This Ticket will be Invalidated. Type 'Y/y' to continue or 'N/n' to cancel: ")
+
+        if label == "y" or label == "Y":
+         
+            # try:
+            item = conn.execute("SELECT ticket_id, event_id, owner_fname, owner_lname, owner_email, event_name, start_date, end_date, venue FROM Tickets WHERE ticket_id=?",(t_id))
+            for column in item:
+                num = column [0]
+                eventid = column [1]
+                owner_fname = column [2]
+                owner_lname = column [3]
+                owner_email = column [4]
+                name = column [5]
+                start_date = column [6]
+                end_date = column [7]
+                venue = column [8]
+                
+                conn.execute("INSERT INTO invalidtickets VALUES (null,?,?,?,?,?,?,?,?,?);",
+                                (num, eventid, owner_fname, owner_lname, owner_email, name, start_date, end_date, venue))
+                db_con.commit()
+                
+                conn.execute("DELETE FROM tickets WHERE ticket_id=?", (t_id))
+                db_con.commit()
+                print("***_______Event with ID " + t_id +" has been deleted successfully__________***")
+            
+
+        elif label == "n" or label == "N":
+            return 0
+        else:
+            print ("Invalid Input")
+        
+    except Exception as e:
+        print("Error in updating db" + str(e))
+
 
 def main():
 	while True:
@@ -278,6 +332,7 @@ def main():
 		print("4. Edit Events")
 		print("5. Generate Tickets")
 		print("6. Validate Tickets")
+		print("7. Invalidate Tickets")
 		print("0. Quit")
 		x = input("Please select an option: ")
 		x = int(x)
@@ -306,6 +361,9 @@ def main():
 		elif x == 6:
 			#tickect invalidation
 			ticket_validation()
+		elif x == 7:
+			#tickect invalidation
+			ticket_invalidation()
 		else:
 			print("Invalid input")
 if __name__ == '__main__':
