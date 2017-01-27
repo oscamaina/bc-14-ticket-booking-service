@@ -1,5 +1,9 @@
 # Ticket-booking-service
-A service for use at service stations where ticket bookings can be made
+A ticket booking service.
+Allows users to add, edit,view and delete tickets
+Users can also generate,validate and invalidate tickets.
+Generated tickets are sent to the user's email
+
 
 **Installation**
 
@@ -36,7 +40,8 @@ A service for use at service stations where ticket bookings can be made
     events 411 view_all <table_name>
     events 411 delete_event <eventid>
     events 411 edit_event <event_id>
-    events 411 ticket_invalidation <ticket_id> 
+    events 411 generate_ticket <event_id>
+    events 411 ticket_invalidation <ticket_id>
 
 ```
  
